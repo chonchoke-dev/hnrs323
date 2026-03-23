@@ -73,7 +73,10 @@ function showScreen(id) {
     if (id === 'summary') updateSummary();
     if (id === 'viz') {
         viz.init(state.userPosition);
-        resetVizOverlay();
+        setTimeout(() => {
+            viz.resize();
+            resetVizOverlay();
+        }, 100); // Small delay to ensure display: flex is applied and layout is updated
     }
 }
 

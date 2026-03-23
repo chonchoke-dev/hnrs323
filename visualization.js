@@ -224,6 +224,10 @@ export function focusUser() {
     animateMove(camera, [camera.position.x, camera.position.y, camera.position.z], camTarget, 800);
 }
 
+export function resize() {
+    onWindowResize();
+}
+
 function onWindowResize() {
     const container = document.getElementById('canvas-container');
     camera.aspect = container.clientWidth / container.clientHeight;
