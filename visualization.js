@@ -3,46 +3,48 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 let scene, camera, renderer, controls;
 let userPoint, companyPoints = {};
-let pointsGroup, gridGroup;
+let pointsGroup, gridGroup, labelsGroup;
 let isInitialized = false;
 
 const COMPANY_DATA = {
-    'NVIDIA': { pos: [4, 9, 8], shift: [3, -0.5, 1.5], color: 0x22c55e },
-    'TSMC': { pos: [2, 10, 9], shift: [1, 0, 0.5], color: 0xef4444 },
+    'NVIDIA': { pos: [4, 9, 8], shift: [3, -0.5, 1.5], color: 0x4ade80 },
+    'TSMC': { pos: [2, 10, 9], shift: [1, 0, 0.5], color: 0xf87171 },
     'SMIC': { pos: [8, 5, 6], shift: [1, 0.5, 0.5], color: 0xfacc15 },
-    'Intel': { pos: [5, 8, 7], shift: [2, -0.5, 0.5], color: 0x3b82f6 },
-    'Huawei': { pos: [6, 8, 7], shift: [-2, 0.5, 2.5], color: 0xa855f7 }
+    'Intel': { pos: [5, 8, 7], shift: [2, -0.5, 0.5], color: 0x60a5fa },
+    'Huawei': { pos: [6, 8, 7], shift: [-2, 0.5, 2.5], color: 0xc084fc }
 };
 
 export function init(initialUserPos) {
-    if (isInitialized) return;
-
     const container = document.getElementById('canvas-container');
+    if (!container || isInitialized) return;
+
     const width = container.clientWidth;
     const height = container.clientHeight;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0a); // Darker for high contrast
+    scene.background = new THREE.Color(0x020617);
+    scene.fog = new THREE.Fog(0x020617, 10, 50);
 
-    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(15, 15, 15);
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    applyDefaultAngle();
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
     pointsGroup = new THREE.Group();
-    scene.add(pointsGroup);
-    
+    labelsGroup = new THREE.Group();
     gridGroup = new THREE.Group();
-    scene.add(gridGroup);
+    scene.add(pointsGroup, labelsGroup, gridGroup);
 
     createGrid();
-    createAxes();
+    createAxesWithLabels();
+    addLights();
     
     // Plot Companies
     for (const [name, data] of Object.entries(COMPANY_DATA)) {
@@ -50,97 +52,114 @@ export function init(initialUserPos) {
     }
 
     // Plot User
-    userPoint = createPoint(initialUserPos, 0x007bff, 'YOU (Initial)', true);
-
-    // Controls listeners
-    document.getElementById('btn-reset-cam').onclick = resetCamera;
-    document.getElementById('btn-focus-user').onclick = focusUser;
+    userPoint = createPoint(initialUserPos, 0x38bdf8, 'YOU', true);
 
     window.addEventListener('resize', onWindowResize);
     animate();
     isInitialized = true;
 }
 
-function createPoint(pos, color, name, isUser = false) {
-    const geometry = new THREE.SphereGeometry(isUser ? 0.4 : 0.3, 32, 32);
-    const material = new THREE.MeshBasicMaterial({ color: color });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(...pos);
-    pointsGroup.add(mesh);
-
-    // Label
-    const sprite = createLabel(name, color);
-    sprite.position.y = isUser ? 0.6 : 0.5;
-    mesh.add(sprite);
-
-    return { mesh, pos: [...pos], color, name, label: sprite };
+function addLights() {
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambient);
+    const point = new THREE.PointLight(0xffffff, 1);
+    point.position.set(10, 20, 10);
+    scene.add(point);
 }
 
-function createLabel(text, color) {
+function createPoint(pos, color, name, isUser = false) {
+    const group = new THREE.Group();
+    group.position.set(...pos);
+    pointsGroup.add(group);
+
+    const geometry = new THREE.SphereGeometry(isUser ? 0.35 : 0.25, 32, 32);
+    const material = new THREE.MeshPhongMaterial({ 
+        color: color, 
+        emissive: color, 
+        emissiveIntensity: 0.3,
+        shininess: 100 
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    group.add(mesh);
+
+    // Glow
+    const glowGeo = new THREE.SphereGeometry(isUser ? 0.5 : 0.4, 32, 32);
+    const glowMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.1 });
+    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    group.add(glowMesh);
+
+    // Label Sprite
+    const sprite = createLabelSprite(name, color);
+    sprite.position.y = isUser ? 0.7 : 0.5;
+    group.add(sprite);
+
+    return { group, pos: [...pos], color, name, label: sprite };
+}
+
+function createLabelSprite(text, color) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 256;
-    canvas.height = 64;
+    canvas.width = 512;
+    canvas.height = 128;
     
-    ctx.font = 'Bold 32px Inter, sans-serif';
+    ctx.font = '500 48px Inter, sans-serif';
     ctx.fillStyle = '#' + new THREE.Color(color).getHexString();
     ctx.textAlign = 'center';
-    ctx.fillText(text, 128, 32);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 64);
 
     const texture = new THREE.CanvasTexture(canvas);
     const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
     const sprite = new THREE.Sprite(material);
-    sprite.scale.set(3, 0.75, 1);
+    sprite.scale.set(4, 1, 1);
     return sprite;
 }
 
 function createGrid() {
     const size = 10;
     const divisions = 10;
-    const gridXY = new THREE.GridHelper(size, divisions, 0x333333, 0x222222);
+    const gridXY = new THREE.GridHelper(size, divisions, 0x1e293b, 0x0f172a);
     gridXY.position.set(5, 5, 0);
     gridXY.rotation.x = Math.PI / 2;
     gridGroup.add(gridXY);
 
-    const gridXZ = new THREE.GridHelper(size, divisions, 0x333333, 0x222222);
+    const gridXZ = new THREE.GridHelper(size, divisions, 0x1e293b, 0x0f172a);
     gridXZ.position.set(5, 0, 5);
     gridGroup.add(gridXZ);
 }
 
-function createAxes() {
-    const colors = [0xff0000, 0x00ff00, 0x0000ff];
-    const labels = ['Dependency', 'Innovation', 'Adaptability'];
+function createAxesWithLabels() {
+    const axisMat = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.5 });
     
-    // Simple line axes
-    const axisMat = new THREE.LineBasicMaterial({ color: 0x888888 });
-    
-    // X
-    const xGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(12,0,0)]);
-    const xLine = new THREE.Line(xGeo, axisMat);
-    scene.add(xLine);
+    const axes = [
+        { dir: [12,0,0], label: 'DEPENDENCY', color: 0x94a3b8, labelPos: [13, 0, 0] },
+        { dir: [0,12,0], label: 'INNOVATION', color: 0x94a3b8, labelPos: [0, 13, 0] },
+        { dir: [0,0,12], label: 'ADAPTABILITY', color: 0x94a3b8, labelPos: [0, 0, 13] }
+    ];
 
-    // Y
-    const yGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,12,0)]);
-    const yLine = new THREE.Line(yGeo, axisMat);
-    scene.add(yLine);
+    axes.forEach(axis => {
+        const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(...axis.dir)]);
+        const line = new THREE.Line(geo, axisMat);
+        scene.add(line);
 
-    // Z
-    const zGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,12)]);
-    const zLine = new THREE.Line(zGeo, axisMat);
-    scene.add(zLine);
+        const lbl = createLabelSprite(axis.label, axis.color);
+        lbl.scale.set(6, 1.5, 1);
+        lbl.position.set(...axis.labelPos);
+        labelsGroup.add(lbl);
+    });
 }
 
 export function updateUserPoint(newPos, duration) {
-    animateMove(userPoint.mesh, userPoint.pos, newPos, duration);
+    animateMove(userPoint.group, userPoint.pos, newPos, duration);
     userPoint.pos = [...newPos];
 }
 
-function animateMove(mesh, start, end, duration) {
+function animateMove(object, start, end, duration) {
     const startTime = performance.now();
     function step(now) {
         const progress = Math.min((now - startTime) / duration, 1);
-        const ease = progress * (2 - progress);
-        mesh.position.set(
+        const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+        object.position.set(
             start[0] + (end[0] - start[0]) * ease,
             start[1] + (end[1] - start[1]) * ease,
             start[2] + (end[2] - start[2]) * ease
@@ -151,61 +170,58 @@ function animateMove(mesh, start, end, duration) {
 }
 
 export function startShiftAnimation(onComplete) {
-    const duration = 2500;
+    const duration = 4000; // Slower, intentional shift
     
-    // Create Trajectories and Faded Markers
     for (const [name, data] of Object.entries(COMPANY_DATA)) {
         const target = data.pos.map((v, i) => v + data.shift[i]);
         createTrajectory(data.pos, target, data.color);
-        animateMove(companyPoints[name].mesh, data.pos, target, duration);
+        animateMove(companyPoints[name].group, data.pos, target, duration);
     }
 
-    // User Shift
-    const userTarget = userPoint.pos.map((v, i) => v + (i===0 ? 2 : (i===2 ? 1 : 0)));
-    createTrajectory(userPoint.pos, userTarget, 0x007bff);
-    animateMove(userPoint.mesh, userPoint.pos, userTarget, duration);
-    userPoint.label.material.map.dispose();
-    userPoint.label.material.map = createLabelTexture('YOU (Shifted)', 0x007bff);
-
+    const userTarget = userPoint.pos.map((v, i) => v + (i===0 ? 1.5 : (i===2 ? 2.5 : 0)));
+    createTrajectory(userPoint.pos, userTarget, 0x38bdf8);
+    animateMove(userPoint.group, userPoint.pos, userTarget, duration);
+    
     setTimeout(onComplete, duration);
-}
-
-function createLabelTexture(text, color) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 256; canvas.height = 64;
-    ctx.font = 'Bold 32px Inter, sans-serif';
-    ctx.fillStyle = '#' + new THREE.Color(color).getHexString();
-    ctx.textAlign = 'center';
-    ctx.fillText(text, 128, 32);
-    return new THREE.CanvasTexture(canvas);
 }
 
 function createTrajectory(start, end, color) {
     // Faded Sphere at start
     const geo = new THREE.SphereGeometry(0.15, 16, 16);
-    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.3 });
+    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.2 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(...start);
     scene.add(mesh);
 
-    // Line
+    // Dashed Line
     const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
     const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-    const lineMat = new THREE.LineDashedMaterial({ color: color, dashSize: 0.5, gapSize: 0.2, transparent: true, opacity: 0.5 });
+    const lineMat = new THREE.LineDashedMaterial({ 
+        color: color, 
+        dashSize: 0.2, 
+        gapSize: 0.1, 
+        transparent: true, 
+        opacity: 0.4 
+    });
     const line = new THREE.Line(lineGeo, lineMat);
     line.computeLineDistances();
     scene.add(line);
 }
 
-function resetCamera() {
+export function resetCamera() {
     controls.reset();
-    camera.position.set(15, 15, 15);
+    applyDefaultAngle();
 }
 
-function focusUser() {
+export function applyDefaultAngle() {
+    camera.position.set(22, 18, 22);
+    if (controls) controls.target.set(5, 5, 5);
+}
+
+export function focusUser() {
     controls.target.set(...userPoint.pos);
-    camera.position.set(userPoint.pos[0] + 5, userPoint.pos[1] + 5, userPoint.pos[2] + 5);
+    const camTarget = [userPoint.pos[0] + 8, userPoint.pos[1] + 8, userPoint.pos[2] + 8];
+    animateMove(camera, [camera.position.x, camera.position.y, camera.position.z], camTarget, 800);
 }
 
 function onWindowResize() {
