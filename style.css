@@ -1,0 +1,306 @@
+:root {
+    --bg-color: #f8f9fa;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --accent-user: #007bff;
+    --accent-muted: #6c757d;
+    --grid-color: #dee2e6;
+    --card-bg: #ffffff;
+    --border-radius: 12px;
+    --font-main: 'Inter', sans-serif;
+    --font-heading: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    overflow: hidden; /* App handles scrolling internally if needed */
+    height: 100vh;
+    width: 100vw;
+}
+
+#app {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    padding: 2rem;
+}
+
+.screen.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.content {
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+h2 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+}
+
+p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+    color: var(--text-secondary);
+}
+
+.btn-primary {
+    background-color: var(--text-primary);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+    padding: 0.8rem 2rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-top: 2rem;
+}
+
+/* Strategy Phase */
+.step-indicator {
+    display: block;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    margin-bottom: 1rem;
+    color: var(--accent-muted);
+}
+
+.options-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.option-btn {
+    background-color: var(--card-bg);
+    border: 1px solid var(--grid-color);
+    padding: 1.2rem;
+    border-radius: var(--border-radius);
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.option-btn:active {
+    background-color: #f1f3f5;
+    border-color: var(--text-primary);
+}
+
+/* Summary Screen */
+.profile-card {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.profile-card p {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.stats-grid {
+    display: grid;
+    gap: 1.2rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-muted);
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--accent-user);
+    width: 0%;
+    transition: width 1s ease-out;
+}
+
+/* 3D Visualization Screen */
+#screen-viz {
+    padding: 0;
+    background: #000; /* Dark background for 3D */
+}
+
+#canvas-container {
+    width: 100%;
+    height: 100%;
+}
+
+#viz-overlay {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#viz-overlay * {
+    pointer-events: all;
+}
+
+#viz-message {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.viz-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+}
+
+.viz-controls button {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--grid-color);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.btn-next {
+    background-color: var(--accent-user);
+    color: white;
+    border: none;
+    padding: 1rem;
+    width: 100%;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Explanation & Final */
+#explanation-container {
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.explanation-item {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--accent-user);
+}
+
+.explanation-item h4 {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--accent-muted);
+}
+
+.explanation-item p {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.learn-more {
+    font-size: 0.85rem;
+    color: var(--accent-user);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.insight-card {
+    background: #e7f1ff;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-top: 2rem;
+}
+
+.insight-card p {
+    font-style: italic;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.insight-card p:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.5rem; }
+    .screen { padding: 1.5rem; }
+}

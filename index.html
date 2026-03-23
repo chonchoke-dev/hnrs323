@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Semiconductor Strategy Simulation</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for academic feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Introduction Screen -->
+        <section id="screen-intro" class="screen active">
+            <div class="content">
+                <h1>Semiconductor Strategy Simulation</h1>
+                <p>Build a semiconductor company. Then see how your strategy evolves under different operating conditions.</p>
+                <button id="btn-start" class="btn-primary">Start</button>
+            </div>
+        </section>
+
+        <!-- Strategy Phase (Questions) -->
+        <section id="screen-strategy" class="screen">
+            <div class="content">
+                <div id="question-container">
+                    <span class="step-indicator">Step 1 of 5</span>
+                    <h2 id="question-text">Question goes here?</h2>
+                    <div id="options-container" class="options-grid">
+                        <!-- Options injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Strategy Summary -->
+        <section id="screen-summary" class="screen">
+            <div class="content">
+                <h2>Your Company Profile</h2>
+                <div class="profile-card">
+                    <p id="profile-description">Your company focuses on...</p>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Dependency</span>
+                            <div class="progress-bar"><div id="bar-dependency" class="progress-fill"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Innovation</span>
+                            <div class="progress-bar"><div id="bar-innovation" class="progress-fill"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Adaptability</span>
+                            <div class="progress-bar"><div id="bar-adaptability" class="progress-fill"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <button id="btn-to-viz" class="btn-primary">Continue to Visualization</button>
+            </div>
+        </section>
+
+        <!-- 3D Visualization Screen -->
+        <section id="screen-viz" class="screen">
+            <div id="canvas-container">
+                <!-- Three.js Canvas -->
+            </div>
+            <div id="viz-overlay">
+                <div id="viz-message">Initial Strategy Map</div>
+                <div class="viz-controls">
+                    <button id="btn-reset-cam">Reset View</button>
+                    <button id="btn-focus-user">Focus User</button>
+                </div>
+                <button id="btn-to-growth" class="btn-next">Next Phase</button>
+            </div>
+        </section>
+
+        <!-- China Transition -->
+        <section id="screen-china-intro" class="screen">
+            <div class="content">
+                <p>Now consider how this strategy would operate in China’s semiconductor business environment.</p>
+                <button id="btn-start-shift" class="btn-primary">Observe Shift</button>
+            </div>
+        </section>
+
+        <!-- Explanation & Final Screen -->
+        <section id="screen-final" class="screen">
+            <div class="content">
+                <h2>The Strategy Evolution</h2>
+                <div id="explanation-container">
+                    <!-- Explain shifts here -->
+                </div>
+                
+                <div class="insight-card">
+                    <p id="shared-insight-1">"Your strategy did not disappear. It was reshaped by the environment in which it operates."</p>
+                    <p id="shared-insight-2">"Different companies move in different ways, but all must adapt to their operating conditions."</p>
+                </div>
+                
+                <button onclick="location.reload()" class="btn-secondary">Start Over</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
