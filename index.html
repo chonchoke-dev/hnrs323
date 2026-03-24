@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Semiconductor Strategy Simulation</title>
+    <title>Strategic Roadmap | Semiconductor Analysis</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app">
         <!-- 1. Intro Screen -->
         <section id="screen-intro" class="screen active">
             <div class="content">
-                <h1>Semiconductor Strategy</h1>
-                <p>An interactive data story on how business strategy evolves under different operating conditions.</p>
+                <header>
+                    <h1>Semiconductor Strategy</h1>
+                    <p>An interactive data story on how business strategy evolves under different operating conditions.</p>
+                </header>
                 <button id="btn-start" class="btn-primary">Start Experience</button>
             </div>
         </section>
@@ -32,7 +34,7 @@
         <!-- 3. Strategy Summary -->
         <section id="screen-summary" class="screen">
             <div class="content">
-                <span class="step-indicator">Generated Profile</span>
+                <span class="step-indicator">Strategic Profile</span>
                 <h2>Your Company Strategy</h2>
                 <div class="profile-card">
                     <p id="profile-description"></p>
@@ -51,62 +53,55 @@
                         </div>
                     </div>
                 </div>
-                <button id="btn-to-viz" class="btn-primary">View in 3D Space</button>
+                <button id="btn-to-viz" class="btn-primary">View Strategic Map</button>
             </div>
         </section>
 
-        <!-- 4. 3D Plot (Shared for Plot, Growth, Shift Reveal) -->
+        <!-- 4. 2D Mapping Screen (Refined Sidebar Layout) -->
         <section id="screen-viz" class="screen">
-            <div id="canvas-container"></div>
-            <!-- Axis Labels Overlay -->
-            <div id="viz-caption" style="position: absolute; top: 1.5rem; left: 1.5rem; color: #94a3b8; font-size: 0.8rem; pointer-events: none; max-width: 250px;">
-                This 3D space maps business strategy across dependency, innovation, and adaptability.
+            <div id="viz-container">
+                <svg id="viz-svg" viewBox="0 0 800 600"></svg>
             </div>
             
-            <div id="viz-overlay">
-                <div id="viz-message-card">
-                    <p id="viz-status-text">Strategic Mapping Engine</p>
-                    <div id="shift-legend" class="viz-legend" style="display: none;">
-                        <div class="legend-item"><div class="dot faded"></div> <span>Original</span></div>
-                        <div class="legend-item"><div class="line-icon"></div> <span>Trajectory</span></div>
-                        <div class="legend-item"><div class="dot bright"></div> <span>Reshaped</span></div>
-                    </div>
+            <div id="viz-sidebar">
+                <h3>Insights</h3>
+                <div id="viz-status-text">Strategic Mapping Engine</div>
+                
+                <div id="shift-legend" class="viz-legend" style="display: none;">
+                    <div class="legend-item"><div class="dot user"></div> <span>Your Strategy</span></div>
+                    <div class="legend-item"><div class="dot company"></div> <span>Industry Peers</span></div>
                 </div>
                 
-                <div class="viz-controls">
-                    <button id="btn-reset-cam">Reset View</button>
-                    <button id="btn-default-angle">Default Angle</button>
-                    <button id="btn-focus-user">Focus You</button>
-                </div>
-                
-                <button id="btn-viz-action" class="btn-primary" style="width: 100%;">Continue</button>
+                <button id="btn-viz-action" class="btn-primary">Observe Growth</button>
             </div>
         </section>
 
-        <!-- 5. China Transition Phase -->
+        <!-- 5. Transition Phase -->
         <section id="screen-china-intro" class="screen">
             <div class="content">
-                <span class="step-indicator">Operational Context</span>
+                <span class="step-indicator">Global Context</span>
                 <h2>Environment Shift</h2>
-                <p>Now consider how this strategy would operate in China’s semiconductor business environment.</p>
+                <p>Now consider how this strategy would operate in a different semiconductor business environment, such as China.</p>
                 <button id="btn-to-shift" class="btn-primary">Observe Shift</button>
             </div>
         </section>
 
-        <!-- 6. Explanation / Source Screen (Refined) -->
+        <!-- 6. Explanation Screen -->
         <section id="screen-explanation" class="screen">
-            <div class="content" style="max-width: 600px;">
+            <div class="content" style="max-width: 800px; text-align: left;">
                 <span class="step-indicator">Strategic Analysis</span>
-                <h2>Evolution Insights</h2>
+                <h2 style="text-align: center;">Evolution Insights</h2>
                 <div class="explanation-scroll" id="explanation-container"></div>
-                <button id="btn-to-final" class="btn-primary">Final Summary</button>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button id="btn-to-final" class="btn-primary">Final Summary</button>
+                </div>
             </div>
         </section>
 
         <!-- 7. Final Result -->
         <section id="screen-final" class="screen">
             <div class="content">
-                <span class="step-indicator">Complete</span>
+                <span class="step-indicator">Conclusion</span>
                 <h1>Simulation Outcome</h1>
                 <div class="insight-card">
                     <p id="shared-insight-1">"Your strategy did not disappear. It was reshaped by the environment in which it operates."</p>
@@ -118,14 +113,6 @@
     </div>
 
     <!-- Scripts -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
     <script type="module" src="main.js"></script>
 </body>
 </html>

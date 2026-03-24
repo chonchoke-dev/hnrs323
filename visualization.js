@@ -1,242 +1,181 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-let scene, camera, renderer, controls;
-let userPoint, companyPoints = {};
-let pointsGroup, gridGroup, labelsGroup;
-let isInitialized = false;
-
+let svg, userCircle, userLabel;
+const companyPoints = {};
 const COMPANY_DATA = {
-    'NVIDIA': { pos: [4, 9, 8], shift: [3, -0.5, 1.5], color: 0x4ade80 },
-    'TSMC': { pos: [2, 10, 9], shift: [1, 0, 0.5], color: 0xf87171 },
-    'SMIC': { pos: [8, 5, 6], shift: [1, 0.5, 0.5], color: 0xfacc15 },
-    'Intel': { pos: [5, 8, 7], shift: [2, -0.5, 0.5], color: 0x60a5fa },
-    'Huawei': { pos: [6, 8, 7], shift: [-2, 0.5, 2.5], color: 0xc084fc }
+    'NVIDIA': { pos: [4, 9], shift: [3, -1], color: '#34d399' },
+    'TSMC': { pos: [2, 10], shift: [1, 0], color: '#f87171' },
+    'SMIC': { pos: [8, 5], shift: [1, 1], color: '#fbbf24' },
+    'Intel': { pos: [5, 8], shift: [2, -1], color: '#60a5fa' },
+    'Huawei': { pos: [6, 8], shift: [-2, 1], color: '#a78bfa' }
 };
 
+const MARGIN = 60;
+const WIDTH = 800;
+const HEIGHT = 600;
+
 export function init(initialUserPos) {
-    const container = document.getElementById('canvas-container');
-    if (!container || isInitialized) return;
-
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020617);
-    scene.fog = new THREE.Fog(0x020617, 10, 50);
-
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    applyDefaultAngle();
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
-
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-
-    pointsGroup = new THREE.Group();
-    labelsGroup = new THREE.Group();
-    gridGroup = new THREE.Group();
-    scene.add(pointsGroup, labelsGroup, gridGroup);
+    svg = document.getElementById('viz-svg');
+    if (!svg) return;
+    svg.innerHTML = ''; // Clear previous
 
     createGrid();
-    createAxesWithLabels();
-    addLights();
-    
+    createAxes();
+
     // Plot Companies
     for (const [name, data] of Object.entries(COMPANY_DATA)) {
         companyPoints[name] = createPoint(data.pos, data.color, name);
     }
 
     // Plot User
-    userPoint = createPoint(initialUserPos, 0x38bdf8, 'YOU', true);
+    const [uX, uY] = project(initialUserPos[0], initialUserPos[1]);
+    userCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    userCircle.setAttribute("cx", uX);
+    userCircle.setAttribute("cy", uY);
+    userCircle.setAttribute("r", 10);
+    userCircle.setAttribute("fill", "#0071e3");
+    userCircle.style.transition = "all 1.5s cubic-bezier(0.4, 0, 0.2, 1)";
+    svg.appendChild(userCircle);
 
-    window.addEventListener('resize', onWindowResize);
-    animate();
-    isInitialized = true;
+    userLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    userLabel.setAttribute("x", uX);
+    userLabel.setAttribute("y", uY - 15);
+    userLabel.setAttribute("text-anchor", "middle");
+    userLabel.setAttribute("fill", "#0071e3");
+    userLabel.setAttribute("font-weight", "600");
+    userLabel.setAttribute("font-size", "12px");
+    userLabel.textContent = "YOU";
+    userLabel.style.transition = "all 1.5s cubic-bezier(0.4, 0, 0.2, 1)";
+    svg.appendChild(userLabel);
 }
 
-function addLights() {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambient);
-    const point = new THREE.PointLight(0xffffff, 1);
-    point.position.set(10, 20, 10);
-    scene.add(point);
-}
-
-function createPoint(pos, color, name, isUser = false) {
-    const group = new THREE.Group();
-    group.position.set(...pos);
-    pointsGroup.add(group);
-
-    const geometry = new THREE.SphereGeometry(isUser ? 0.35 : 0.25, 32, 32);
-    const material = new THREE.MeshPhongMaterial({ 
-        color: color, 
-        emissive: color, 
-        emissiveIntensity: 0.3,
-        shininess: 100 
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    group.add(mesh);
-
-    // Glow
-    const glowGeo = new THREE.SphereGeometry(isUser ? 0.5 : 0.4, 32, 32);
-    const glowMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.1 });
-    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-    group.add(glowMesh);
-
-    // Label Sprite
-    const sprite = createLabelSprite(name, color);
-    sprite.position.y = isUser ? 0.7 : 0.5;
-    group.add(sprite);
-
-    return { group, pos: [...pos], color, name, label: sprite };
-}
-
-function createLabelSprite(text, color) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 512;
-    canvas.height = 128;
-    
-    ctx.font = '500 48px Inter, sans-serif';
-    ctx.fillStyle = '#' + new THREE.Color(color).getHexString();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, 256, 64);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(4, 1, 1);
-    return sprite;
+function project(x, y) {
+    // Input 0-10 -> Canvas coordinates
+    const px = MARGIN + (x / 10) * (WIDTH - 2 * MARGIN);
+    const py = HEIGHT - MARGIN - (y / 10) * (HEIGHT - 2 * MARGIN);
+    return [px, py];
 }
 
 function createGrid() {
-    const size = 10;
-    const divisions = 10;
-    const gridXY = new THREE.GridHelper(size, divisions, 0x1e293b, 0x0f172a);
-    gridXY.position.set(5, 5, 0);
-    gridXY.rotation.x = Math.PI / 2;
-    gridGroup.add(gridXY);
+    for (let i = 0; i <= 10; i++) {
+        const [x1, y1] = project(i, 0);
+        const [x2, y2] = project(i, 10);
+        const [x3, y3] = project(0, i);
+        const [x4, y4] = project(10, i);
 
-    const gridXZ = new THREE.GridHelper(size, divisions, 0x1e293b, 0x0f172a);
-    gridXZ.position.set(5, 0, 5);
-    gridGroup.add(gridXZ);
-}
-
-function createAxesWithLabels() {
-    const axisMat = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.5 });
-    
-    const axes = [
-        { dir: [12,0,0], label: 'DEPENDENCY', color: 0x94a3b8, labelPos: [13, 0, 0] },
-        { dir: [0,12,0], label: 'INNOVATION', color: 0x94a3b8, labelPos: [0, 13, 0] },
-        { dir: [0,0,12], label: 'ADAPTABILITY', color: 0x94a3b8, labelPos: [0, 0, 13] }
-    ];
-
-    axes.forEach(axis => {
-        const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(...axis.dir)]);
-        const line = new THREE.Line(geo, axisMat);
-        scene.add(line);
-
-        const lbl = createLabelSprite(axis.label, axis.color);
-        lbl.scale.set(6, 1.5, 1);
-        lbl.position.set(...axis.labelPos);
-        labelsGroup.add(lbl);
-    });
-}
-
-export function updateUserPoint(newPos, duration) {
-    animateMove(userPoint.group, userPoint.pos, newPos, duration);
-    userPoint.pos = [...newPos];
-}
-
-function animateMove(object, start, end, duration) {
-    const startTime = performance.now();
-    function step(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-        object.position.set(
-            start[0] + (end[0] - start[0]) * ease,
-            start[1] + (end[1] - start[1]) * ease,
-            start[2] + (end[2] - start[2]) * ease
-        );
-        if (progress < 1) requestAnimationFrame(step);
+        drawLine(x1, y1, x2, y2, "#e8e8ed", 1);
+        drawLine(x3, y3, x4, y4, "#e8e8ed", 1);
     }
-    requestAnimationFrame(step);
+}
+
+function createAxes() {
+    const [ox, oy] = project(0, 0);
+    const [xx, xy] = project(10, 0);
+    const [yx, yy] = project(0, 10);
+
+    drawLine(ox, oy, xx, xy, "#86868b", 2);
+    drawLine(ox, oy, yx, yy, "#86868b", 2);
+
+    // Labels
+    drawText(ox + (xx - ox) / 2, oy + 40, "Dependency →", "#86868b", "middle");
+    drawVerticalText(ox - 40, oy + (yy - oy) / 2, "← Innovation", "#86868b");
+}
+
+function createPoint(pos, color, name) {
+    const [x, y] = project(pos[0], pos[1]);
+    
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", y);
+    circle.setAttribute("r", 6);
+    circle.setAttribute("fill", "#d2d2d7");
+    circle.style.transition = "all 4s cubic-bezier(0.4, 0, 0.2, 1)";
+    svg.appendChild(circle);
+
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y - 10);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("fill", "#86868b");
+    text.setAttribute("font-size", "10px");
+    text.textContent = name;
+    text.style.transition = "all 4s cubic-bezier(0.4, 0, 0.2, 1)";
+    svg.appendChild(text);
+
+    return { circle, text, pos };
+}
+
+function drawLine(x1, y1, x2, y2, color, width) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", color);
+    line.setAttribute("stroke-width", width);
+    svg.appendChild(line);
+}
+
+function drawText(x, y, text, color, anchor) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    el.setAttribute("x", x);
+    el.setAttribute("y", y);
+    el.setAttribute("text-anchor", anchor);
+    el.setAttribute("fill", color);
+    el.setAttribute("font-size", "12px");
+    el.setAttribute("font-weight", "500");
+    el.textContent = text;
+    svg.appendChild(el);
+}
+
+function drawVerticalText(x, y, text, color) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    el.setAttribute("x", x);
+    el.setAttribute("y", y);
+    el.setAttribute("text-anchor", "middle");
+    el.setAttribute("fill", color);
+    el.setAttribute("font-size", "12px");
+    el.setAttribute("font-weight", "500");
+    el.setAttribute("transform", `rotate(-90, ${x}, ${y})`);
+    el.textContent = text;
+    svg.appendChild(el);
+}
+
+export function updateUserPoint(newPos) {
+    const [x, y] = project(newPos[0], newPos[1]);
+    userCircle.setAttribute("cx", x);
+    userCircle.setAttribute("cy", y);
+    userLabel.setAttribute("x", x);
+    userLabel.setAttribute("y", y - 15);
 }
 
 export function startShiftAnimation(onComplete) {
-    const duration = 4000; // Slower, intentional shift
-    
     for (const [name, data] of Object.entries(COMPANY_DATA)) {
-        const target = data.pos.map((v, i) => v + data.shift[i]);
-        createTrajectory(data.pos, target, data.color);
-        animateMove(companyPoints[name].group, data.pos, target, duration);
+        const target = [data.pos[0] + data.shift[0], data.pos[1] + data.shift[1]];
+        const [tx, ty] = project(target[0], target[1]);
+        
+        companyPoints[name].circle.setAttribute("cx", tx);
+        companyPoints[name].circle.setAttribute("cy", ty);
+        companyPoints[name].circle.setAttribute("fill", data.color);
+        companyPoints[name].circle.setAttribute("r", 8);
+        
+        companyPoints[name].text.setAttribute("x", tx);
+        companyPoints[name].text.setAttribute("y", ty - 12);
+        companyPoints[name].text.setAttribute("fill", data.color);
+        companyPoints[name].text.setAttribute("font-weight", "600");
     }
 
-    const userTarget = userPoint.pos.map((v, i) => v + (i===0 ? 1.5 : (i===2 ? 2.5 : 0)));
-    createTrajectory(userPoint.pos, userTarget, 0x38bdf8);
-    animateMove(userPoint.group, userPoint.pos, userTarget, duration);
-    
-    setTimeout(onComplete, duration);
+    // Shift User
+    const userTarget = [7.5, 6.5]; // Example shift for 2D
+    const [ux, uy] = project(userTarget[0], userTarget[1]);
+    userCircle.setAttribute("cx", ux);
+    userCircle.setAttribute("cy", uy);
+    userLabel.setAttribute("x", ux);
+    userLabel.setAttribute("y", uy - 15);
+
+    setTimeout(onComplete, 4000);
 }
 
-function createTrajectory(start, end, color) {
-    // Faded Sphere at start
-    const geo = new THREE.SphereGeometry(0.15, 16, 16);
-    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.2 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(...start);
-    scene.add(mesh);
-
-    // Dashed Line
-    const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
-    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-    const lineMat = new THREE.LineDashedMaterial({ 
-        color: color, 
-        dashSize: 0.2, 
-        gapSize: 0.1, 
-        transparent: true, 
-        opacity: 0.4 
-    });
-    const line = new THREE.Line(lineGeo, lineMat);
-    line.computeLineDistances();
-    scene.add(line);
-}
-
-export function resetCamera() {
-    controls.reset();
-    applyDefaultAngle();
-}
-
-export function applyDefaultAngle() {
-    camera.position.set(22, 18, 22);
-    if (controls) controls.target.set(5, 5, 5);
-}
-
-export function focusUser() {
-    controls.target.set(...userPoint.pos);
-    const camTarget = [userPoint.pos[0] + 8, userPoint.pos[1] + 8, userPoint.pos[2] + 8];
-    animateMove(camera, [camera.position.x, camera.position.y, camera.position.z], camTarget, 800);
-}
-
-export function resize() {
-    onWindowResize();
-}
-
-function onWindowResize() {
-    const container = document.getElementById('canvas-container');
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-}
+// Stubs for main.js compatibility
+export function resetCamera() {}
+export function applyDefaultAngle() {}
+export function focusUser() {}
+export function resize() {}

@@ -4,7 +4,7 @@ const state = {
     screen: 'intro',
     currentQuestion: 0,
     userStats: { dependency: 4, innovation: 4, adaptability: 4 },
-    userPosition: [4, 4, 4],
+    userPosition: [4, 4],
 };
 
 const questions = [
@@ -56,11 +56,6 @@ function init() {
     document.getElementById('btn-to-shift').onclick = triggerChinaShift;
     document.getElementById('btn-to-final').onclick = () => showScreen('final');
 
-    // Viz Controls
-    document.getElementById('btn-reset-cam').onclick = viz.resetCamera;
-    document.getElementById('btn-default-angle').onclick = viz.applyDefaultAngle;
-    document.getElementById('btn-focus-user').onclick = viz.focusUser;
-
     showScreen('intro');
     renderQuestion();
 }
@@ -73,10 +68,7 @@ function showScreen(id) {
     if (id === 'summary') updateSummary();
     if (id === 'viz') {
         viz.init(state.userPosition);
-        setTimeout(() => {
-            viz.resize();
-            resetVizOverlay();
-        }, 100); // Small delay to ensure display: flex is applied and layout is updated
+        resetVizOverlay();
     }
 }
 
@@ -97,7 +89,7 @@ function renderQuestion() {
             state.currentQuestion++;
             if (state.currentQuestion < questions.length) renderQuestion();
             else {
-                state.userPosition = [state.userStats.dependency, state.userStats.innovation, state.userStats.adaptability];
+                state.userPosition = [state.userStats.dependency, state.userStats.innovation];
                 showScreen('summary');
             }
         };
@@ -119,10 +111,13 @@ function updateSummary() {
 }
 
 function resetVizOverlay() {
-    document.getElementById('viz-status-text').textContent = "Current Strategic Map";
-    document.getElementById('shift-legend').style.display = 'none';
-    document.getElementById('btn-viz-action').textContent = "Observe Growth";
-    document.getElementById('btn-viz-action').dataset.phase = 'plot';
+    document.getElementById('viz-status-text').textContent = "Strategic Landscape";
+    document.getElementById('shift-legend').style.display = 'block';
+    const btn = document.getElementById('btn-viz-action');
+    btn.textContent = "Observe Growth";
+    btn.dataset.phase = 'plot';
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'all';
 }
 
 function handleVizAction() {
@@ -135,12 +130,13 @@ function handleVizAction() {
         btn.style.opacity = '0';
         btn.style.pointerEvents = 'none';
         
-        state.userPosition = state.userPosition.map(v => v + (Math.random() - 0.5) * 0.8);
-        viz.updateUserPoint(state.userPosition, 1500);
+        // Minor nudge for growth effect
+        state.userPosition = state.userPosition.map(v => Math.max(0, Math.min(10, v + (Math.random() - 0.5) * 0.8)));
+        viz.updateUserPoint(state.userPosition);
 
         setTimeout(() => {
             showScreen('china-intro');
-        }, 2500);
+        }, 2000);
     } else if (phase === 'shift-complete') {
         showScreen('explanation');
         renderExplanations();
@@ -149,15 +145,15 @@ function handleVizAction() {
 
 function triggerChinaShift() {
     showScreen('viz');
-    document.getElementById('viz-status-text').textContent = "Repositioning strategies in the operational environment...";
-    document.getElementById('shift-legend').style.display = 'flex';
+    document.getElementById('viz-status-text').textContent = "Repositioning strategies in the global landscape...";
+    document.getElementById('shift-legend').style.display = 'block';
     
     const btn = document.getElementById('btn-viz-action');
     btn.style.opacity = '0';
     btn.style.pointerEvents = 'none';
 
     viz.startShiftAnimation(() => {
-        document.getElementById('viz-status-text').textContent = "Strategy Reshaped (Concept Insight Only)";
+        document.getElementById('viz-status-text').textContent = "Strategic Shift Observations";
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'all';
         btn.textContent = "See Analytical Insights";
@@ -201,10 +197,8 @@ function renderExplanations() {
         div.className = 'explanation-item';
         div.innerHTML = `
             <h3>${s.title}</h3>
-            <h4>Change Observation</h4>
-            <p>${s.change}</p>
-            <h4>Analysis</h4>
-            <p>${s.why}</p>
+            <p><strong>Change:</strong> ${s.change}</p>
+            <p><strong>Analysis:</strong> ${s.why}</p>
             <a href="${s.link}" target="_blank" class="learn-more">Official Source →</a>
         `;
         container.appendChild(div);
