@@ -111,10 +111,12 @@ function updateSummary() {
 }
 
 function resetVizOverlay() {
-    document.getElementById('viz-status-text').textContent = "Strategic Landscape";
+    document.getElementById('viz-status-text').textContent = "Current Strategic Map";
+    document.getElementById('viz-subtext').textContent = "This map projects your company onto the global semiconductor landscape based on your strategy profile.";
     document.getElementById('shift-legend').style.display = 'block';
+    
     const btn = document.getElementById('btn-viz-action');
-    btn.textContent = "Observe Growth";
+    btn.textContent = "Simulate Initial Scaling";
     btn.dataset.phase = 'plot';
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'all';
@@ -126,7 +128,9 @@ function handleVizAction() {
 
     if (phase === 'plot') {
         // Growth Phase
-        document.getElementById('viz-status-text').textContent = "Your strategy begins to take shape.";
+        document.getElementById('viz-status-text').textContent = "Market Entry Simulation";
+        document.getElementById('viz-subtext').textContent = "Observing how your strategy starts to scale in the current global market environment.";
+        
         btn.style.opacity = '0';
         btn.style.pointerEvents = 'none';
         
@@ -145,7 +149,8 @@ function handleVizAction() {
 
 function triggerChinaShift() {
     showScreen('viz');
-    document.getElementById('viz-status-text').textContent = "Repositioning strategies in the global landscape...";
+    document.getElementById('viz-status-text').textContent = "Regional Adaptation Simulation";
+    document.getElementById('viz-subtext').textContent = "Analyzing how your strategy adapts when moved to a different operating environment (e.g., China).";
     document.getElementById('shift-legend').style.display = 'block';
     
     const btn = document.getElementById('btn-viz-action');
@@ -153,7 +158,8 @@ function triggerChinaShift() {
     btn.style.pointerEvents = 'none';
 
     viz.startShiftAnimation(() => {
-        document.getElementById('viz-status-text').textContent = "Strategic Shift Observations";
+        document.getElementById('viz-status-text').textContent = "Simulation Complete";
+        document.getElementById('viz-subtext').textContent = "The shift highlights key areas where your strategy evolves to meet local market conditions.";
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'all';
         btn.textContent = "See Analytical Insights";
