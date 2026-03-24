@@ -57,23 +57,53 @@
             </div>
         </section>
 
-        <!-- 4. 2D Mapping Screen (Refined Sidebar Layout) -->
+        <!-- 4. 2D Mapping Screen (Narrative Dashboard) -->
         <section id="screen-viz" class="screen">
+            <!-- Strategy Guide Overlay -->
+            <div id="viz-guide-overlay" class="overlay" style="display: none;">
+                <div class="guide-content">
+                    <h2>How to Read the Strategic Map</h2>
+                    <div class="guide-grid">
+                        <div class="guide-card">
+                            <span class="axis-label">Vertical Axis</span>
+                            <h3>Innovation Logic</h3>
+                            <p>Measures proprietary IP, high-end design, and unique architectural value. High innovation reduces direct competition but increases R&D risk.</p>
+                        </div>
+                        <div class="guide-card">
+                            <span class="axis-label">Horizontal Axis</span>
+                            <h3>Dependency Logic</h3>
+                            <p>Measures reliance on external supply chains, standardized nodes, and global ecosystems. Low dependency means higher sovereignty.</p>
+                        </div>
+                    </div>
+                    <p class="guide-note">We compare your strategy with <b>NVIDIA</b> and <b>TSMC</b> to show how different business models absorb the "shock" of moving to a new regional environment.</p>
+                    <button id="btn-close-guide" class="btn-primary">I Understand</button>
+                </div>
+            </div>
+
             <div id="viz-container">
                 <svg id="viz-svg" viewBox="0 0 800 600"></svg>
+                <!-- Dynamic Narrative Bubble -->
+                <div id="narrative-bubble" class="narrative-card" style="display: none;">
+                    <h4 id="narrative-title">NVIDIA Concept</h4>
+                    <p id="narrative-text">Adjusting to regional parity by creating bespoke architectures.</p>
+                </div>
             </div>
             
             <div id="viz-sidebar">
-                <h3>Simulation Stage</h3>
+                <h3>Strategic Analysis</h3>
                 <div id="viz-status-text">Strategic Mapping Engine</div>
                 <p id="viz-subtext" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem;"></p>
                 
-                <div id="shift-legend" class="viz-legend" style="display: none;">
+                <div id="shift-legend" class="viz-legend">
                     <div class="legend-item"><div class="dot user"></div> <span>Your Strategy</span></div>
                     <div class="legend-item"><div class="dot company"></div> <span>Industry Peers</span></div>
                 </div>
                 
-                <button id="btn-viz-action" class="btn-primary">Project Strategy</button>
+                <div id="narrative-controls" style="display: none; margin-top: 1rem;">
+                    <button id="btn-next-step" class="btn-primary">Next Phase →</button>
+                </div>
+                <button id="btn-viz-action" class="btn-primary">Begin Simulation</button>
+                <button id="btn-open-guide" class="btn-secondary" style="margin-top: 1rem; width: 100%;">View Logic Guide</button>
             </div>
         </section>
 

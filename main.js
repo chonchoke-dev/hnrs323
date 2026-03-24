@@ -56,6 +56,11 @@ function init() {
     document.getElementById('btn-to-shift').onclick = triggerChinaShift;
     document.getElementById('btn-to-final').onclick = () => showScreen('final');
 
+    // Narrative and Guide
+    document.getElementById('btn-open-guide').onclick = () => document.getElementById('viz-guide-overlay').style.display = 'flex';
+    document.getElementById('btn-close-guide').onclick = () => document.getElementById('viz-guide-overlay').style.display = 'none';
+    document.getElementById('btn-next-step').onclick = handleNextNarrativeStep;
+
     showScreen('intro');
     renderQuestion();
 }
@@ -113,13 +118,18 @@ function updateSummary() {
 function resetVizOverlay() {
     document.getElementById('viz-status-text').textContent = "Current Strategic Map";
     document.getElementById('viz-subtext').textContent = "This map projects your company onto the global semiconductor landscape based on your strategy profile.";
+    document.getElementById('viz-guide-overlay').style.display = 'flex'; // Auto-show guide for clarity
+    
     document.getElementById('shift-legend').style.display = 'block';
+    document.getElementById('narrative-controls').style.display = 'none';
+    document.getElementById('narrative-bubble').style.display = 'none';
     
     const btn = document.getElementById('btn-viz-action');
-    btn.textContent = "Simulate Initial Scaling";
+    btn.textContent = "Simulate Market Entry";
     btn.dataset.phase = 'plot';
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'all';
+    btn.style.display = 'block';
 }
 
 function handleVizAction() {
@@ -127,14 +137,12 @@ function handleVizAction() {
     const phase = btn.dataset.phase;
 
     if (phase === 'plot') {
-        // Growth Phase
         document.getElementById('viz-status-text').textContent = "Market Entry Simulation";
         document.getElementById('viz-subtext').textContent = "Observing how your strategy starts to scale in the current global market environment.";
         
         btn.style.opacity = '0';
         btn.style.pointerEvents = 'none';
         
-        // Minor nudge for growth effect
         state.userPosition = state.userPosition.map(v => Math.max(0, Math.min(10, v + (Math.random() - 0.5) * 0.8)));
         viz.updateUserPoint(state.userPosition);
 
@@ -147,24 +155,69 @@ function handleVizAction() {
     }
 }
 
+let narrativeStep = 0;
+const narrativeData = [
+    {
+        name: "NVIDIA Concept",
+        text: "Innovation Leader: NVIDIA handles the environmental shift by creating bespoke architectures to maintain regional parity without full verticalization.",
+        focus: "NVIDIA"
+    },
+    {
+        name: "TSMC Concept",
+        text: "Manufacturing Anchor: TSMC maintains continuity by authorizing mature node production, prioritizing stability over technical leapfrogging in this region.",
+        focus: "TSMC"
+    },
+    {
+        name: "Your Strategy",
+        text: "Your current profile suggests a adaptive shift. Compare your movement to the industry anchors to understand your relative risk exposure.",
+        focus: "USER"
+    }
+];
+
 function triggerChinaShift() {
     showScreen('viz');
     document.getElementById('viz-status-text').textContent = "Regional Adaptation Simulation";
-    document.getElementById('viz-subtext').textContent = "Analyzing how your strategy adapts when moved to a different operating environment (e.g., China).";
-    document.getElementById('shift-legend').style.display = 'block';
+    document.getElementById('viz-subtext').textContent = "Analyzing strategic movements step-by-step. Click 'Next Phase' to observe the logic of industry anchors.";
     
-    const btn = document.getElementById('btn-viz-action');
-    btn.style.opacity = '0';
-    btn.style.pointerEvents = 'none';
-
+    document.getElementById('btn-viz-action').style.display = 'none';
+    document.getElementById('narrative-controls').style.display = 'block';
+    
+    narrativeStep = 0;
+    // Reset all circles before starting
     viz.startShiftAnimation(() => {
+        // We delay the final completion until after the narrative steps
+    });
+}
+
+function handleNextNarrativeStep() {
+    if (narrativeStep < narrativeData.length) {
+        const step = narrativeData[narrativeStep];
+        
+        // Show the bubble with info
+        const bubble = document.getElementById('narrative-bubble');
+        bubble.style.display = 'block';
+        document.getElementById('narrative-title').textContent = step.name;
+        document.getElementById('narrative-text').textContent = step.text;
+        
+        // Highlight logic could go here in visualization.js
+        // viz.highlight(step.focus);
+
+        narrativeStep++;
+    } else {
+        // Simulation Complete
+        document.getElementById('narrative-bubble').style.display = 'none';
+        document.getElementById('narrative-controls').style.display = 'none';
+        
         document.getElementById('viz-status-text').textContent = "Simulation Complete";
-        document.getElementById('viz-subtext').textContent = "The shift highlights key areas where your strategy evolves to meet local market conditions.";
+        document.getElementById('viz-subtext').textContent = "Final positioning after environmental shift. You can now see the detailed analytical insights.";
+        
+        const btn = document.getElementById('btn-viz-action');
+        btn.style.display = 'block';
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'all';
         btn.textContent = "See Analytical Insights";
         btn.dataset.phase = 'shift-complete';
-    });
+    }
 }
 
 function renderExplanations() {
